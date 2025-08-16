@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { PushSubscription, sendNotification, setVapidDetails } from 'web-push';
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -24,6 +25,8 @@ export class MyDurableObject extends DurableObject {
 	 * @param env - The interface to reference bindings declared in wrangler.jsonc
 	 */
 	constructor(ctx: DurableObjectState, env: Env) {
+		setVapidDetails("https://p4nda.co.uk", env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
+
 		super(ctx, env);
 	}
 
@@ -37,6 +40,39 @@ export class MyDurableObject extends DurableObject {
 	async sayHello(name: string): Promise<string> {
 		return `Hello, ${name}!`;
 	}
+
+	async registerNotification(subscription: PushSubscription): Promise<void> {
+		await this.ctx.storage.put("value", subscription);
+
+		console.log("Subscription registered:", subscription.endpoint);
+
+		let currentAlarm = await this.ctx.storage.getAlarm();
+		if (currentAlarm == null || currentAlarm <= Date.now()) {
+			console.log("Setting alarm for 1 minute in the future");
+			await this.ctx.storage.setAlarm(Date.now() + 1000 * 60);
+		}
+		else {
+			console.log("Alarm already set for:", new Date(currentAlarm));
+		}
+	}
+
+	async alarm() {
+		console.log("Alarm triggered");
+
+		const subscription = (await this.ctx.storage.get("value")) as PushSubscription;
+
+		if (!subscription) {
+			throw new Error("No subscription found in storage.");
+		}
+
+		console.log("Sending notification to subscription:", subscription.endpoint);
+
+		await sendNotification(subscription, "Hello from Cloudflare Workers!");
+
+		await this.ctx.storage.deleteAll();
+
+		await this.ctx.storage.deleteAlarm();
+	}
 }
 
 export default {
@@ -49,18 +85,32 @@ export default {
 	 * @returns The response to be sent back to the client
 	 */
 	async fetch(request, env, ctx): Promise<Response> {
+
+		// Parse the 'name' parameter from the request URL
+		const url = new URL(request.url);
+		const name = url.searchParams.get("name") || "world";
+
 		// Create a `DurableObjectId` for an instance of the `MyDurableObject`
 		// class named "foo". Requests from all Workers to the instance named
 		// "foo" will go to a single globally unique Durable Object instance.
-		const id: DurableObjectId = env.MY_DURABLE_OBJECT.idFromName("foo");
+		const id: DurableObjectId = env.MY_DURABLE_OBJECT.idFromName(name);
 
 		// Create a stub to open a communication channel with the Durable
 		// Object instance.
 		const stub = env.MY_DURABLE_OBJECT.get(id);
 
+		const pathname = url.pathname;
+		if (pathname === "/subscribe") {
+			console.log("Subscribe endpoint called");
+
+			var jsonBody = await request.json<PushSubscription>();
+			await stub.registerNotification(jsonBody);
+			return new Response("Subscribed (log written)");
+		}
+
 		// Call the `sayHello()` RPC method on the stub to invoke the method on
 		// the remote Durable Object instance
-		const greeting = await stub.sayHello("world");
+		const greeting = await stub.sayHello(name);
 
 		return new Response(greeting);
 	},
