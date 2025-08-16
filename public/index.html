@@ -9,12 +9,76 @@
 		<h1 id="heading"></h1>
 		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
 		<script>
-			fetch('/message')
+			// Get the 'name' parameter from the page URL
+			const urlParams = new URLSearchParams(window.location.search);
+			const name = urlParams.get('name');
+			const fetchUrl = name ? `/message?name=${encodeURIComponent(name)}` : '/message';
+			fetch(fetchUrl)
 				.then((resp) => resp.text())
 				.then((text) => {
 					const h1 = document.getElementById('heading');
 					h1.textContent = text;
 				});
 		</script>
+		<button id="subscribe-btn">Subscribe</button>
+		<script>
+		const VAPID_PUBLIC_KEY = 'BLQLjROLgIgXQXHd6ykhxje8bZiaPe8JcdbTOOG9OgafZnyetcw68Fu69RVHOHEW6DRpqNNJ7rlUjkhxMiceheU'; // TODO: Replace with your actual VAPID public key
+
+		// Register the service worker on page load
+		let serviceWorkerRegistration = null;
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/sw.js').then(reg => {
+				serviceWorkerRegistration = reg;
+			}).catch(err => {
+				console.error('Service worker registration failed:', err);
+			});
+		}
+
+		async function urlBase64ToUint8Array(base64String) {
+			const padding = '='.repeat((4 - base64String.length % 4) % 4);
+			const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+			const rawData = window.atob(base64);
+			const outputArray = new Uint8Array(rawData.length);
+			for (let i = 0; i < rawData.length; ++i) {
+				outputArray[i] = rawData.charCodeAt(i);
+			}
+			return outputArray;
+		}
+
+		document.getElementById('subscribe-btn').addEventListener('click', async () => {
+			if (!('serviceWorker' in navigator)) {
+				alert('Service workers are not supported in this browser.');
+				return;
+			}
+			if (!('PushManager' in window)) {
+				alert('Push notifications are not supported in this browser.');
+				return;
+			}
+			const permission = await Notification.requestPermission();
+			if (permission !== 'granted') {
+				alert('Notification permission denied.');
+				return;
+			}
+			try {
+				const reg = serviceWorkerRegistration || await navigator.serviceWorker.ready;
+				const subscription = await reg.pushManager.subscribe({
+					userVisibleOnly: true,
+					applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+				});
+				await fetch('/subscribe', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(subscription)
+				});
+				alert('Subscribed for push notifications!');
+			} catch (err) {
+				console.error('Subscription failed:', err);
+				alert('Subscription failed. See console for details.');
+			}
+		});
+		</script>
+
+
+
 	</body>
 </html>
