@@ -65,12 +65,12 @@
 					userVisibleOnly: true,
 					applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
 				});
-				await fetch('/subscribe', {
+				var response = await fetch('/subscribe', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(subscription)
 				});
-				alert('Subscribed for push notifications!');
+				alert(await response.text());
 			} catch (err) {
 				console.error('Subscription failed:', err);
 				alert('Subscription failed. See console for details.');
