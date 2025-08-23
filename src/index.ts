@@ -76,6 +76,10 @@ export class MyDurableObject extends DurableObject {
 		} catch (err) {
 			const anyErr = err as WebPushError;
 			console.error("Failed to send notification:", anyErr);
+			console.error("Status code:", anyErr.statusCode);
+			console.error("Body:", anyErr.body);
+			console.error("Headers:", anyErr.headers);
+			console.error("Endpoint:", anyErr.endpoint);
 
 			// web-push returns a WebPushError with statusCode (410/404 => gone/invalid)
 			// const status = anyErr?.statusCode as number | undefined;
