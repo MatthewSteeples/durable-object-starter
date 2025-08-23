@@ -64,7 +64,7 @@ export class MyDurableObject extends DurableObject {
 	async alarm() {
 		console.log("Alarm triggered");
 
-		const subscription = (await this.ctx.storage.get("value")) as PushSubscription | undefined;
+		const subscription = await this.ctx.storage.get<PushSubscription>("value");
 		if (!subscription) throw new Error("No subscription found in storage.");
 
 		try {
