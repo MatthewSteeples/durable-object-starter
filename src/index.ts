@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { PushSubscription, sendNotification, setVapidDetails, WebPushError, RequestOptions } from 'web-push';
+import { createHash } from 'node:crypto';
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -116,28 +117,43 @@ export default {
 		const url = new URL(request.url);
 		const name = url.searchParams.get("name") || "world";
 
-		// Create a `DurableObjectId` for an instance of the `MyDurableObject`
-		// class named "foo". Requests from all Workers to the instance named
-		// "foo" will go to a single globally unique Durable Object instance.
-		const id: DurableObjectId = env.MY_DURABLE_OBJECT.idFromName(name);
-
-		// Create a stub to open a communication channel with the Durable
-		// Object instance.
-		const stub = env.MY_DURABLE_OBJECT.get(id);
 
 		const pathname = url.pathname;
 		if (pathname === "/subscribe") {
 			console.log("Subscribe endpoint called");
 
-			var jsonBody = await request.json<PushSubscription>();
+			const jsonBody = await request.json<PushSubscription>();
+
+			const md5 = createHash('md5').update(jsonBody.endpoint, 'utf8').digest('hex');
+			console.log("MD5 of endpoint:", md5);
+
+			// Create a `DurableObjectId` for an instance of the `MyDurableObject`
+			// class named "foo". Requests from all Workers to the instance named
+			// "foo" will go to a single globally unique Durable Object instance.
+			const id: DurableObjectId = env.MY_DURABLE_OBJECT.idFromName(md5);
+
+			// Create a stub to open a communication channel with the Durable
+			// Object instance.
+			const stub = env.MY_DURABLE_OBJECT.get(id);
+
 			await stub.registerNotification(jsonBody);
 			return new Response("Subscribed (log written)");
 		}
+		else {
 
-		// Call the `sayHello()` RPC method on the stub to invoke the method on
-		// the remote Durable Object instance
-		const greeting = await stub.sayHello(name);
+			// Create a `DurableObjectId` for an instance of the `MyDurableObject`
+			// class named "foo". Requests from all Workers to the instance named
+			// "foo" will go to a single globally unique Durable Object instance.
+			const id: DurableObjectId = env.MY_DURABLE_OBJECT.idFromName(name);
 
-		return new Response(greeting);
+			// Create a stub to open a communication channel with the Durable
+			// Object instance.
+			const stub = env.MY_DURABLE_OBJECT.get(id);
+			// Call the `sayHello()` RPC method on the stub to invoke the method on
+			// the remote Durable Object instance
+			const greeting = await stub.sayHello(name);
+
+			return new Response(greeting);
+		}
 	},
 } satisfies ExportedHandler<Env>;
