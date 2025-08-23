@@ -25,6 +25,10 @@ export class MyDurableObject extends DurableObject {
 	 * @param env - The interface to reference bindings declared in wrangler.jsonc
 	 */
 	constructor(ctx: DurableObjectState, env: Env) {
+		if (!env.VAPID_PRIVATE_KEY) {
+			throw new Error("Missing VAPID_PRIVATE_KEY");
+		}
+
 		setVapidDetails("https://p4nda.co.uk", env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
 
 		super(ctx, env);
