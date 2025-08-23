@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { PushSubscription, sendNotification, setVapidDetails, WebPushError } from 'web-push';
+import { PushSubscription, sendNotification, setVapidDetails, WebPushError, RequestOptions } from 'web-push';
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -68,7 +68,13 @@ export class MyDurableObject extends DurableObject {
 
 		try {
 			console.log("Sending notification to:", subscription.endpoint);
-			await sendNotification(subscription, "Hello from Cloudflare Workers!");
+
+			const options: RequestOptions = {
+				TTL: 60,
+				urgency: "normal"
+			};
+
+			await sendNotification(subscription, "Hello from Cloudflare Workers!", options);
 
 			// Success: cleanup
 			await this.ctx.storage.deleteAll();
