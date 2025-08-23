@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { PushSubscription, sendNotification, setVapidDetails } from 'web-push';
+import { PushSubscription, sendNotification, setVapidDetails, WebPushError } from 'web-push';
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -59,19 +59,31 @@ export class MyDurableObject extends DurableObject {
 	async alarm() {
 		console.log("Alarm triggered");
 
-		const subscription = (await this.ctx.storage.get("value")) as PushSubscription;
+		const subscription = (await this.ctx.storage.get("value")) as PushSubscription | undefined;
+		if (!subscription) throw new Error("No subscription found in storage.");
 
-		if (!subscription) {
-			throw new Error("No subscription found in storage.");
+		try {
+			console.log("Sending notification to:", subscription.endpoint);
+			await sendNotification(subscription, "Hello from Cloudflare Workers!");
+
+			// Success: cleanup
+			await this.ctx.storage.deleteAll();
+			await this.ctx.storage.deleteAlarm();
+		} catch (err) {
+			const anyErr = err as WebPushError;
+			console.error("Failed to send notification:", anyErr);
+
+			// web-push returns a WebPushError with statusCode (410/404 => gone/invalid)
+			// const status = anyErr?.statusCode as number | undefined;
+			// if (status === 410 || status === 404) {
+			// 	// Subscription is invalid/expired; remove and stop retrying
+			// 	await this.ctx.storage.deleteAll();
+			// 	await this.ctx.storage.deleteAlarm();
+			// } else {
+			// 	// Transient error: backoff and retry later (adjust delay as needed)
+			// 	await this.ctx.storage.setAlarm(Date.now() + 5 * 60 * 1000);
+			// }
 		}
-
-		console.log("Sending notification to subscription:", subscription.endpoint);
-
-		await sendNotification(subscription, "Hello from Cloudflare Workers!");
-
-		await this.ctx.storage.deleteAll();
-
-		await this.ctx.storage.deleteAlarm();
 	}
 }
 
