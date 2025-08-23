@@ -18,7 +18,9 @@ import { createHash } from 'node:crypto';
 
 /** A Durable Object's behavior is defined in an exported Javascript class */
 export class MyDurableObject extends DurableObject {
-	private readonly gcmApiKey!: string;
+	private readonly gcmApiKey: string;
+	private readonly localEnv: Env;
+
 	/**
 	 * The constructor is invoked once upon creation of the Durable Object, i.e. the first call to
 	 * 	`DurableObjectStub::get` for a given identifier (no-op constructors can be omitted)
@@ -29,16 +31,7 @@ export class MyDurableObject extends DurableObject {
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 
-		if (!env.VAPID_PRIVATE_KEY) {
-			throw new Error("Missing VAPID_PRIVATE_KEY");
-		}
-
-		if (!env.GCM_APIKey) {
-			throw new Error("Missing GCM_APIKey");
-		}
-
-		setVapidDetails("https://p4nda.co.uk", env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
-
+		this.localEnv = env;
 		this.gcmApiKey = env.GCM_APIKey;
 	}
 
@@ -76,11 +69,29 @@ export class MyDurableObject extends DurableObject {
 
 		try {
 			console.log("Sending notification to:", subscription.endpoint);
+			console.log("Using GCM API Key:", this.gcmApiKey);
+			console.log("Auth Key:", subscription.keys.auth);
+			console.log("P256DH Key:", subscription.keys.p256dh);
+			console.log("Vapid Key:", this.localEnv.VAPID_PUBLIC_KEY);
+			console.log("Vapid Private Key:", this.localEnv.VAPID_PRIVATE_KEY);
+
+			if (!this.localEnv.VAPID_PRIVATE_KEY) {
+				throw new Error("Missing VAPID_PRIVATE_KEY");
+			}
+
+			if (!this.localEnv.GCM_APIKey) {
+				throw new Error("Missing GCM_APIKey");
+			}
 
 			const options: RequestOptions = {
 				TTL: 60,
 				urgency: "normal",
-				gcmAPIKey: this.gcmApiKey
+				gcmAPIKey: this.gcmApiKey,
+				vapidDetails: {
+					subject: "mailto:matthew@mercuryit.co.uk",
+					publicKey: this.localEnv.VAPID_PUBLIC_KEY,
+					privateKey: this.localEnv.VAPID_PRIVATE_KEY
+				}
 			};
 
 			await sendNotification(subscription, "Hello from Cloudflare Workers!", options);
