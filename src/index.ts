@@ -18,6 +18,7 @@ import { createHash } from 'node:crypto';
 
 /** A Durable Object's behavior is defined in an exported Javascript class */
 export class MyDurableObject extends DurableObject {
+	private readonly gcmApiKey!: string;
 	/**
 	 * The constructor is invoked once upon creation of the Durable Object, i.e. the first call to
 	 * 	`DurableObjectStub::get` for a given identifier (no-op constructors can be omitted)
@@ -26,13 +27,19 @@ export class MyDurableObject extends DurableObject {
 	 * @param env - The interface to reference bindings declared in wrangler.jsonc
 	 */
 	constructor(ctx: DurableObjectState, env: Env) {
+		super(ctx, env);
+
 		if (!env.VAPID_PRIVATE_KEY) {
 			throw new Error("Missing VAPID_PRIVATE_KEY");
 		}
 
+		if (!env.GCM_APIKey) {
+			throw new Error("Missing GCM_APIKey");
+		}
+
 		setVapidDetails("https://p4nda.co.uk", env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
 
-		super(ctx, env);
+		this.gcmApiKey = env.GCM_APIKey;
 	}
 
 	/**
@@ -72,7 +79,8 @@ export class MyDurableObject extends DurableObject {
 
 			const options: RequestOptions = {
 				TTL: 60,
-				urgency: "normal"
+				urgency: "normal",
+				gcmAPIKey: this.gcmApiKey
 			};
 
 			await sendNotification(subscription, "Hello from Cloudflare Workers!", options);
@@ -80,7 +88,7 @@ export class MyDurableObject extends DurableObject {
 			// Success: cleanup
 			await this.ctx.storage.deleteAll();
 			await this.ctx.storage.deleteAlarm();
-		} catch (err) {
+		} catch (err: unknown) {
 			const anyErr = err as WebPushError;
 			console.error("Failed to send notification:", anyErr);
 			console.error("Status code:", anyErr.statusCode);

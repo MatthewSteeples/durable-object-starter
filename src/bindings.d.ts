@@ -5,6 +5,7 @@ declare namespace Cloudflare {
   interface Env {
     /** Secret: set via `wrangler secret put VAPID_PRIVATE_KEY` or Dashboard */
     VAPID_PRIVATE_KEY: string;
+	GCM_APIKey: string;
   }
 }
 
