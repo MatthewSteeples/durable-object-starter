@@ -155,10 +155,13 @@ export default {
 			// Object instance.
 			const stub = env.MY_DURABLE_OBJECT.get(id);
 
-			jsonBody.endpoint = "https://www.postb.in/1755965540055-9066692418418";
+			jsonBody.endpoint = "https://www.postb.in/1756754634951-4429937277454";
 
 			await stub.registerNotification(jsonBody);
 			return new Response("Subscribed (log written)");
+		}
+		else if (pathname === "/list"){
+
 		}
 		else {
 
