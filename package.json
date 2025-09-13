@@ -10,7 +10,7 @@
 	},
 	"devDependencies": {
 		"typescript": "^5.9.2",
-		"wrangler": "^4.34.0"
+		"wrangler": "^4.36.0"
 	},
 	"dependencies": {
 		"@types/web-push": "^3.6.4",
