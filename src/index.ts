@@ -264,11 +264,28 @@ export default {
 		}
 		else if (pathname === "/test") {
 			console.log("Test endpoint called");
-			const res =  await https.get('https://www.postb.in/1757787219011-0393211871851');
-			const res2 = await https.get('https://www.postb.in/1757787219011-0393211871851?test=1');
-			const res3 = await https.get('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2');
-			const res4 = await https.get('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2&test3=%2bas');
-			return new Response("Test requests sent (check logs)");
+			// Helper to promisify https.get so we can await it while keeping the https import
+			const httpsGet = (url: string): Promise<{ statusCode?: number }> => {
+				return new Promise((resolve, reject) => {
+					try {
+						const req = https.get(url, (res) => {
+							// Consume data to allow socket to close
+							res.on('data', () => {});
+							res.on('end', () => resolve({ statusCode: res.statusCode }));
+							res.on('error', (err) => reject(err));
+						});
+						req.on('error', (err) => reject(err));
+					} catch (err) {
+						reject(err);
+					}
+				});
+			};
+
+			const res = await httpsGet('https://www.postb.in/1757787219011-0393211871851');
+			const res2 = await httpsGet('https://www.postb.in/1757787219011-0393211871851?test=1');
+			const res3 = await httpsGet('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2');
+			const res4 = await httpsGet('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2&test3=%2bas');
+			return new Response("Test requests sent: " + res.statusCode + ", " + res2.statusCode + ", " + res3.statusCode + ", " + res4.statusCode);
 		}
 		else {
 
