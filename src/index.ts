@@ -159,7 +159,8 @@ export default {
 			return new Response("Subscribed (log written)");
 		}
 		else if (pathname === "/list"){
-
+			console.log("List endpoint called");
+			return new Response("Not implemented");
 		}
 		else {
 
