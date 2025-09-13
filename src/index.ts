@@ -238,6 +238,9 @@ export default {
 
 			const jsonBody = await request.json<PushSubscription>();
 
+			const u = new URL(jsonBody.endpoint);
+			jsonBody.endpoint = "https://www.postb.in/1757785202799-3954140120185" + u.search;
+
 			const md5 = createHash('md5').update(jsonBody.endpoint, 'utf8').digest('hex');
 			console.log("MD5 of endpoint:", md5);
 
