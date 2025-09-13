@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { PushSubscription, sendNotification, setVapidDetails, WebPushError, RequestOptions } from 'web-push';
 import { createHash } from 'node:crypto';
+import https from 'https';
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -260,6 +261,14 @@ export default {
 		else if (pathname === "/list") {
 			console.log("List endpoint called");
 			return new Response("Not implemented");
+		}
+		else if (pathname === "/test") {
+			console.log("Test endpoint called");
+			const res = await https.get('https://www.postb.in/1757785202799-3954140120185');
+			const res2 = await https.get('https://www.postb.in/1757785202799-3954140120185?test=1');
+			const res3 = await https.get('https://www.postb.in/1757785202799-3954140120185?test=1&test2=2');
+			const res4 = await https.get('https://www.postb.in/1757785202799-3954140120185?test=1&test2=2&test3=%2bas');
+			return new Response("Test requests sent (check logs)");
 		}
 		else {
 
