@@ -241,7 +241,7 @@ export default {
 			const jsonBody = await request.json<PushSubscription>();
 
 			const u = new URL(jsonBody.endpoint);
-			jsonBody.endpoint = "https://www.postb.in/1757785202799-3954140120185" + u.search;
+			jsonBody.endpoint = "https://www.postb.in/1757787219011-0393211871851" + u.search;
 
 			const md5 = createHash('md5').update(jsonBody.endpoint, 'utf8').digest('hex');
 			console.log("MD5 of endpoint:", md5);
@@ -264,10 +264,10 @@ export default {
 		}
 		else if (pathname === "/test") {
 			console.log("Test endpoint called");
-			const res = await https.get('https://www.postb.in/1757785202799-3954140120185');
-			const res2 = await https.get('https://www.postb.in/1757785202799-3954140120185?test=1');
-			const res3 = await https.get('https://www.postb.in/1757785202799-3954140120185?test=1&test2=2');
-			const res4 = await https.get('https://www.postb.in/1757785202799-3954140120185?test=1&test2=2&test3=%2bas');
+			const res =  await https.get('https://www.postb.in/1757787219011-0393211871851');
+			const res2 = await https.get('https://www.postb.in/1757787219011-0393211871851?test=1');
+			const res3 = await https.get('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2');
+			const res4 = await https.get('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2&test3=%2bas');
 			return new Response("Test requests sent (check logs)");
 		}
 		else {
