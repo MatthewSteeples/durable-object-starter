@@ -126,15 +126,16 @@ export class MyDurableObject extends DurableObject {
 	}
 
 	async registerNotification(subscription: PushSubscription): Promise<void> {
-		this.sql.exec(
-			`INSERT INTO subscription (endpoint, keys_p256dh, keys_auth) VALUES (?, ?, ?)
-			ON CONFLICT(endpoint) DO UPDATE SET keys_p256dh=excluded.keys_p256dh, keys_auth=excluded.keys_auth;`,
-			subscription.endpoint,
-			subscription.keys.p256dh,
-			subscription.keys.auth
-		);
 
-		//await this.ctx.storage.put("value", subscription);
+		this.ctx.storage.transactionSync(() => {
+			this.sql.exec("DELETE FROM subscription;");
+			this.sql.exec(
+				`INSERT INTO subscription (endpoint, keys_p256dh, keys_auth) VALUES (?, ?, ?);`,
+				subscription.endpoint,
+				subscription.keys.p256dh,
+				subscription.keys.auth
+			);
+		});
 
 		console.log("Subscription registered:", subscription.endpoint);
 
