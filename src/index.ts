@@ -261,28 +261,33 @@ export default {
 		}
 		else if (pathname === "/test") {
 			console.log("Test endpoint called");
-			// Helper to promisify https.get so we can await it while keeping the https import
-			const httpsGet = (url: string): Promise<{ statusCode?: number }> => {
-				return new Promise((resolve, reject) => {
-					try {
-						const req = https.get(url, (res) => {
-							// Consume data to allow socket to close
-							res.on('data', () => {});
-							res.on('end', () => resolve({ statusCode: res.statusCode }));
-							res.on('error', (err) => reject(err));
-						});
-						req.on('error', (err) => reject(err));
-					} catch (err) {
-						reject(err);
-					}
-				});
-			};
 
-			const res = await httpsGet('https://www.postb.in/1757787219011-0393211871851');
-			const res2 = await httpsGet('https://www.postb.in/1757787219011-0393211871851?test=1');
-			const res3 = await httpsGet('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2');
-			const res4 = await httpsGet('https://www.postb.in/1757787219011-0393211871851?test=1&test2=2&test3=%2bas');
-			return new Response("Test requests sent: " + res.statusCode + ", " + res2.statusCode + ", " + res3.statusCode + ", " + res4.statusCode);
+			const postData = JSON.stringify({ message: "Hello from Durable Object test" });
+
+			const result = await new Promise<string>((resolve, reject) => {
+				const options: https.RequestOptions = {
+					hostname: "webhook.site",
+					port: 443,
+					path: "/ad618452-0517-4df7-8d31-93b3633a3cc5",
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"Content-Length": Buffer.byteLength(postData),
+					},
+				};
+
+				const req = https.request(options, (res) => {
+					let body = "";
+					res.on("data", (chunk) => (body += chunk));
+					res.on("end", () => resolve(`status=${res.statusCode}; body=${body}`));
+				});
+
+				req.on("error", (err) => reject(err));
+				req.write(postData);
+				req.end();
+			});
+
+			return new Response(result);
 		}
 		else {
 
