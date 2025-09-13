@@ -15,11 +15,18 @@ import { createHash } from 'node:crypto';
  * Learn more at https://developers.cloudflare.com/durable-objects
  */
 
+type SubscriptionRecord = {
+	endpoint: string;
+	keys_p256dh: string;
+	keys_auth: string;
+};
 
 /** A Durable Object's behavior is defined in an exported Javascript class */
 export class MyDurableObject extends DurableObject {
 	private readonly gcmApiKey: string;
 	private readonly localEnv: Env;
+
+	private readonly sql: SqlStorage;
 
 	/**
 	 * The constructor is invoked once upon creation of the Durable Object, i.e. the first call to
@@ -30,6 +37,14 @@ export class MyDurableObject extends DurableObject {
 	 */
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
+
+		this.sql = ctx.storage.sql;
+
+		 this.sql.exec(`CREATE TABLE IF NOT EXISTS subscription(
+      endpoint    TEXT PRIMARY KEY,
+      keys_p256dh TEXT NOT NULL,
+	  keys_auth   TEXT NOT NULL
+    );`);
 
 		this.localEnv = env;
 		this.gcmApiKey = env.GCM_APIKey;
@@ -47,7 +62,13 @@ export class MyDurableObject extends DurableObject {
 	}
 
 	async registerNotification(subscription: PushSubscription): Promise<void> {
-		await this.ctx.storage.put("value", subscription);
+		await this.sql.exec(
+			`INSERT INTO subscription (endpoint, keys_p256dh, keys_auth) VALUES (?, ?, ?)
+			ON CONFLICT(endpoint) DO UPDATE SET keys_p256dh=excluded.keys_p256dh, keys_auth=excluded.keys_auth;`,
+			[subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth]
+		);
+
+		//await this.ctx.storage.put("value", subscription);
 
 		console.log("Subscription registered:", subscription.endpoint);
 
@@ -64,14 +85,14 @@ export class MyDurableObject extends DurableObject {
 	async alarm() {
 		console.log("Alarm triggered");
 
-		const subscription = await this.ctx.storage.get<PushSubscription>("value");
+		const subscription = await this.sql.exec<SubscriptionRecord>("SELECT * FROM subscription LIMIT 1;").one()
 		if (!subscription) throw new Error("No subscription found in storage.");
 
 		try {
 			console.log("Sending notification to:", subscription.endpoint);
 			console.log("Using GCM API Key:", this.gcmApiKey);
-			console.log("Auth Key:", subscription.keys.auth);
-			console.log("P256DH Key:", subscription.keys.p256dh);
+			console.log("Auth Key:", subscription.keys_auth);
+			console.log("P256DH Key:", subscription.keys_p256dh);
 			console.log("Vapid Key:", this.localEnv.VAPID_PUBLIC_KEY);
 			console.log("Vapid Private Key:", this.localEnv.VAPID_PRIVATE_KEY);
 
@@ -94,7 +115,15 @@ export class MyDurableObject extends DurableObject {
 				}
 			};
 
-			await sendNotification(subscription, "Hello from Cloudflare Workers!", options);
+			var pushSubscription: PushSubscription = {
+				endpoint: subscription.endpoint,
+				keys: {
+					p256dh: subscription.keys_p256dh,
+					auth: subscription.keys_auth
+				}
+			};
+
+			await sendNotification(pushSubscription, "Hello from Cloudflare Workers!", options);
 
 			// Success: cleanup
 			await this.ctx.storage.deleteAll();
