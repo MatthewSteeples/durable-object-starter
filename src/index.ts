@@ -89,27 +89,27 @@ export class MyDurableObject extends DurableObject {
 			return;
 		}
 
-		// Perform migration: create new table, copy data, replace old table
-		this.sql.exec('BEGIN;');
-		this.sql.exec(`CREATE TABLE IF NOT EXISTS subscription_new(
-			endpoint    TEXT PRIMARY KEY,
-			keys_p256dh TEXT NOT NULL,
-			keys_auth   TEXT NOT NULL
-		);`);
+		// Perform migration inside Durable Object storage transaction for safety
+		this.ctx.storage.transactionSync(() => {
+			this.sql.exec(`CREATE TABLE IF NOT EXISTS subscription_new(
+				endpoint    TEXT PRIMARY KEY,
+				keys_p256dh TEXT NOT NULL,
+				keys_auth   TEXT NOT NULL
+			);`);
 
-		// Build SELECT list matching expected columns; use empty string when column missing
-		const selectParts = expected.map(col => existingCols.includes(col) ? col : `''`);
-		let insertSql: string;
-		if (existingCols.includes('endpoint')) {
-			insertSql = `INSERT INTO subscription_new (endpoint, keys_p256dh, keys_auth) SELECT endpoint, MAX(keys_p256dh), MAX(keys_auth) FROM subscription GROUP BY endpoint;`;
-		} else {
-			insertSql = `INSERT INTO subscription_new (endpoint, keys_p256dh, keys_auth) SELECT ${selectParts.join(', ')} FROM subscription;`;
-		}
-		this.sql.exec(insertSql);
+			// Build SELECT list matching expected columns; use empty string when column missing
+			const selectParts = expected.map(col => existingCols.includes(col) ? col : `''`);
+			let insertSql: string;
+			if (existingCols.includes('endpoint')) {
+				insertSql = `INSERT INTO subscription_new (endpoint, keys_p256dh, keys_auth) SELECT endpoint, MAX(keys_p256dh), MAX(keys_auth) FROM subscription GROUP BY endpoint;`;
+			} else {
+				insertSql = `INSERT INTO subscription_new (endpoint, keys_p256dh, keys_auth) SELECT ${selectParts.join(', ')} FROM subscription;`;
+			}
+			this.sql.exec(insertSql);
 
-		this.sql.exec('DROP TABLE subscription;');
-		this.sql.exec("ALTER TABLE subscription_new RENAME TO subscription;");
-		this.sql.exec('COMMIT;');
+			this.sql.exec('DROP TABLE subscription;');
+			this.sql.exec("ALTER TABLE subscription_new RENAME TO subscription;");
+		});
 
 		this.initialized = true;
 	}
@@ -129,7 +129,9 @@ export class MyDurableObject extends DurableObject {
 		this.sql.exec(
 			`INSERT INTO subscription (endpoint, keys_p256dh, keys_auth) VALUES (?, ?, ?)
 			ON CONFLICT(endpoint) DO UPDATE SET keys_p256dh=excluded.keys_p256dh, keys_auth=excluded.keys_auth;`,
-			[subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth]
+			subscription.endpoint,
+			subscription.keys.p256dh,
+			subscription.keys.auth
 		);
 
 		//await this.ctx.storage.put("value", subscription);
