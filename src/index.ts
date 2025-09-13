@@ -27,6 +27,7 @@ export class MyDurableObject extends DurableObject {
 	private readonly localEnv: Env;
 
 	private readonly sql: SqlStorage;
+	private initialized = false;
 
 	/**
 	 * The constructor is invoked once upon creation of the Durable Object, i.e. the first call to
@@ -40,14 +41,77 @@ export class MyDurableObject extends DurableObject {
 
 		this.sql = ctx.storage.sql;
 
-		 this.sql.exec(`CREATE TABLE IF NOT EXISTS subscription(
-      endpoint    TEXT PRIMARY KEY,
-      keys_p256dh TEXT NOT NULL,
-	  keys_auth   TEXT NOT NULL
-    );`);
+		this.ensureSchema();
 
 		this.localEnv = env;
 		this.gcmApiKey = env.GCM_APIKey;
+	}
+
+	private ensureSchema() {
+		if (this.initialized) return;
+
+		// Check existing table schema
+		const info = this.sql.exec("PRAGMA table_info('subscription');").toArray();
+		const existingCols: string[] = info.map((r: any) => r.name);
+		const expected = ["endpoint", "keys_p256dh", "keys_auth"];
+
+		let needsMigration = false;
+
+		if (existingCols.length === 0) {
+			// Table doesn't exist — create with expected schema
+			this.sql.exec(`CREATE TABLE IF NOT EXISTS subscription(
+				endpoint    TEXT PRIMARY KEY,
+				keys_p256dh TEXT NOT NULL,
+				keys_auth   TEXT NOT NULL
+			);`);
+			this.initialized = true;
+			return;
+		}
+
+		// If expected columns are not all present, or endpoint isn't primary key, migrate
+		for (const col of expected) {
+			if (!existingCols.includes(col)) {
+				needsMigration = true;
+				break;
+			}
+		}
+
+		if (!needsMigration) {
+			// check that endpoint is primary key
+			const endpointInfo = info.find((r: any) => r.name === 'endpoint');
+			if (!endpointInfo || !(endpointInfo.pk && Number(endpointInfo.pk) > 0)) {
+				needsMigration = true;
+			}
+		}
+
+		if (!needsMigration) {
+			this.initialized = true;
+			return;
+		}
+
+		// Perform migration: create new table, copy data, replace old table
+		this.sql.exec('BEGIN;');
+		this.sql.exec(`CREATE TABLE IF NOT EXISTS subscription_new(
+			endpoint    TEXT PRIMARY KEY,
+			keys_p256dh TEXT NOT NULL,
+			keys_auth   TEXT NOT NULL
+		);`);
+
+		// Build SELECT list matching expected columns; use empty string when column missing
+		const selectParts = expected.map(col => existingCols.includes(col) ? col : `''`);
+		let insertSql: string;
+		if (existingCols.includes('endpoint')) {
+			insertSql = `INSERT INTO subscription_new (endpoint, keys_p256dh, keys_auth) SELECT endpoint, MAX(keys_p256dh), MAX(keys_auth) FROM subscription GROUP BY endpoint;`;
+		} else {
+			insertSql = `INSERT INTO subscription_new (endpoint, keys_p256dh, keys_auth) SELECT ${selectParts.join(', ')} FROM subscription;`;
+		}
+		this.sql.exec(insertSql);
+
+		this.sql.exec('DROP TABLE subscription;');
+		this.sql.exec("ALTER TABLE subscription_new RENAME TO subscription;");
+		this.sql.exec('COMMIT;');
+
+		this.initialized = true;
 	}
 
 	/**
@@ -62,7 +126,7 @@ export class MyDurableObject extends DurableObject {
 	}
 
 	async registerNotification(subscription: PushSubscription): Promise<void> {
-		await this.sql.exec(
+		this.sql.exec(
 			`INSERT INTO subscription (endpoint, keys_p256dh, keys_auth) VALUES (?, ?, ?)
 			ON CONFLICT(endpoint) DO UPDATE SET keys_p256dh=excluded.keys_p256dh, keys_auth=excluded.keys_auth;`,
 			[subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth]
@@ -85,7 +149,7 @@ export class MyDurableObject extends DurableObject {
 	async alarm() {
 		console.log("Alarm triggered");
 
-		const subscription = await this.sql.exec<SubscriptionRecord>("SELECT * FROM subscription LIMIT 1;").one()
+		const subscription = this.sql.exec<SubscriptionRecord>("SELECT * FROM subscription LIMIT 1;").one()
 		if (!subscription) throw new Error("No subscription found in storage.");
 
 		try {
@@ -187,7 +251,7 @@ export default {
 			await stub.registerNotification(jsonBody);
 			return new Response("Subscribed (log written)");
 		}
-		else if (pathname === "/list"){
+		else if (pathname === "/list") {
 			console.log("List endpoint called");
 			return new Response("Not implemented");
 		}
