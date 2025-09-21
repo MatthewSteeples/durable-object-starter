@@ -263,12 +263,14 @@ export default {
 			console.log("Test endpoint called");
 
 			const postData = JSON.stringify({ message: "Hello from Durable Object test" });
+			const qs = url.searchParams.toString();
+			const path = "/ad618452-0517-4df7-8d31-93b3633a3cc5" + (qs ? "?" + qs : "");
 
 			const result = await new Promise<string>((resolve, reject) => {
 				const options: https.RequestOptions = {
 					hostname: "webhook.site",
 					port: 443,
-					path: "/ad618452-0517-4df7-8d31-93b3633a3cc5?" + url.searchParams.toString(),
+					path: path,
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
