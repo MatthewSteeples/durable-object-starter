@@ -268,7 +268,7 @@ export default {
 				const options: https.RequestOptions = {
 					hostname: "webhook.site",
 					port: 443,
-					path: "/ad618452-0517-4df7-8d31-93b3633a3cc5",
+					path: "/ad618452-0517-4df7-8d31-93b3633a3cc5?test=1",
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
