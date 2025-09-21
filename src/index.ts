@@ -194,8 +194,8 @@ export class MyDurableObject extends DurableObject {
 			await sendNotification(pushSubscription, "Hello from Cloudflare Workers!", options);
 
 			// Success: cleanup
-			await this.ctx.storage.deleteAll();
 			await this.ctx.storage.deleteAlarm();
+			await this.ctx.storage.deleteAll();
 		} catch (err: unknown) {
 			const anyErr = err as WebPushError;
 			console.error("Failed to send notification:", anyErr);
