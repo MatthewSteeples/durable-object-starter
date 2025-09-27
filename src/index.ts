@@ -264,7 +264,7 @@ export default {
 
 			const postData = JSON.stringify({ message: "Hello from Durable Object test" });
 			const qs = url.searchParams.toString();
-			const path = "/94a09392-2459-4dc9-9aa5-455d017a1bac" + (qs ? "?" + qs : "");
+			const path = "/db831074-f37a-4735-9f13-4eab898f28f5" + (qs ? "?" + qs : "");
 
 			const result = await new Promise<string>((resolve, reject) => {
 				const options: https.RequestOptions = {
