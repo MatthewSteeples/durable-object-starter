@@ -292,6 +292,35 @@ export default {
 
 			return new Response(result);
 		}
+		else if (pathname === "/testGet") {
+			console.log("Test endpoint called");
+
+			const qs = url.searchParams.toString();
+			const path = "/b09456ba-41dd-4b75-98bf-ef53456fbdbc" + (qs ? "?" + qs : "");
+
+			const result = await new Promise<string>((resolve, reject) => {
+				const options: https.RequestOptions = {
+					hostname: "webhook.site",
+					port: 443,
+					path: path,
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json"
+					},
+				};
+
+				const req = https.request(options, (res) => {
+					let body = "";
+					res.on("data", (chunk) => (body += chunk));
+					res.on("end", () => resolve(`status=${res.statusCode}; body=${body}`));
+				});
+
+				req.on("error", (err) => reject(err));
+				req.end();
+			});
+
+			return new Response(result);
+		}
 		else {
 
 			// Create a `DurableObjectId` for an instance of the `MyDurableObject`
