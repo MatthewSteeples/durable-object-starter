@@ -142,8 +142,9 @@ export class MyDurableObject extends DurableObject {
 
 		let currentAlarm = await this.ctx.storage.getAlarm();
 		if (currentAlarm == null || currentAlarm <= Date.now()) {
-			console.log("Setting alarm for 10 seconds in the future");
-			await this.ctx.storage.setAlarm(Date.now() + 1000 * 10);
+			var alarmTime = new Date(Date.now() + 10 * 1000); // 10 seconds in the future
+			console.log("Setting alarm for 10 seconds in the future: ", alarmTime);
+			await this.ctx.storage.setAlarm(alarmTime);
 		}
 		else {
 			console.log("Alarm already set for:", new Date(currentAlarm));
