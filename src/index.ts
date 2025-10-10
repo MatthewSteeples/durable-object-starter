@@ -265,7 +265,7 @@ export default {
 
 			const postData = JSON.stringify({ message: "Hello from Durable Object test" });
 			const qs = url.searchParams.toString();
-			const path = "/b09456ba-41dd-4b75-98bf-ef53456fbdbc" + (qs ? "?" + qs : "");
+			const path = "/ff1ab090-de9c-4338-9dd8-43d8226aaa6b" + (qs ? "?" + qs : "");
 
 			const result = await new Promise<string>((resolve, reject) => {
 				const options: https.RequestOptions = {
@@ -296,7 +296,7 @@ export default {
 			console.log("Test endpoint called");
 
 			const qs = url.searchParams.toString();
-			const path = "/b09456ba-41dd-4b75-98bf-ef53456fbdbc" + (qs ? "?" + qs : "");
+			const path = "/ff1ab090-de9c-4338-9dd8-43d8226aaa6b" + (qs ? "?" + qs : "");
 
 			const result = await new Promise<string>((resolve, reject) => {
 				const options: https.RequestOptions = {
