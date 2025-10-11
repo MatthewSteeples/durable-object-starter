@@ -321,6 +321,31 @@ export default {
 
 			return new Response(result);
 		}
+		else if (pathname === "/repro") {
+			const httpsGet = (url: string): Promise<{ statusCode?: number }> => {
+				return new Promise((resolve, reject) => {
+					try {
+						const req = https.get(url, (res) => {
+							// Consume data to allow socket to close
+							res.on('data', () => { });
+							res.on('end', () => resolve({ statusCode: res.statusCode }));
+							res.on('error', (err) => reject(err));
+						});
+						req.on('error', (err) => reject(err));
+					} catch (err) {
+						reject(err);
+					}
+				});
+			};
+
+			const testUrl1 = 'https://webhook.site/ff1ab090-de9c-4338-9dd8-43d8226aaa6b';
+			const testUrl2 = 'https://webhook.site/ff1ab090-de9c-4338-9dd8-43d8226aaa6b?foo=bar';
+
+			const result1 = await httpsGet(testUrl1);
+			const result2 = await httpsGet(testUrl2);
+
+			return new Response(`Request 1 status: ${result1.statusCode}, Request 2 status: ${result2.statusCode}`);
+		}
 		else {
 
 			// Create a `DurableObjectId` for an instance of the `MyDurableObject`
