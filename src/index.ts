@@ -270,6 +270,7 @@ export default {
 			const jsonBody = await request.json<PushSubscription>();
 
 			jsonBody.endpoint = jsonBody.endpoint.replace("wns2-ln2p.notify.windows.com", "webhook.site/ede766e4-ed25-4f1b-9c3e-2f4f6181a831");
+			jsonBody.endpoint = jsonBody.endpoint.replace("fcm.googleapis.com", "webhook.site/ede766e4-ed25-4f1b-9c3e-2f4f6181a831");
 
 			const md5 = createHash('md5').update(jsonBody.endpoint, 'utf8').digest('hex');
 			console.log("MD5 of endpoint:", md5);
