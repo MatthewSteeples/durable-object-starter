@@ -262,6 +262,28 @@ export default {
 			console.log("List endpoint called");
 			return new Response("Not implemented");
 		}
+		else if (pathname === "/testSubscribe") {
+			console.log("Test subscribe endpoint called");
+
+			const jsonBody = await request.json<PushSubscription>();
+
+			jsonBody.endpoint = jsonBody.endpoint.replace("wns2-ln2p.notify.windows.com", "webhook.site/ede766e4-ed25-4f1b-9c3e-2f4f6181a831");
+
+			const md5 = createHash('md5').update(jsonBody.endpoint, 'utf8').digest('hex');
+			console.log("MD5 of endpoint:", md5);
+
+			// Create a `DurableObjectId` for an instance of the `MyDurableObject`
+			// class named "foo". Requests from all Workers to the instance named
+			// "foo" will go to a single globally unique Durable Object instance.
+			const id: DurableObjectId = env.MY_DURABLE_OBJECT.idFromName(md5);
+
+			// Create a stub to open a communication channel with the Durable
+			// Object instance.
+			const stub = env.MY_DURABLE_OBJECT.get(id);
+
+			await stub.registerNotification(jsonBody);
+			return new Response("Subscribed (log written)");
+		}
 		else if (pathname === "/test") {
 			console.log("Test endpoint called");
 

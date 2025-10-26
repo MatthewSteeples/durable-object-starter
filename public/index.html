@@ -21,6 +21,7 @@
 				});
 		</script>
 		<button id="subscribe-btn">Subscribe</button>
+		<button id="test-btn">Test</button>
 		<script>
 		const VAPID_PUBLIC_KEY = 'BLQLjROLgIgXQXHd6ykhxje8bZiaPe8JcdbTOOG9OgafZnyetcw68Fu69RVHOHEW6DRpqNNJ7rlUjkhxMiceheU'; // TODO: Replace with your actual VAPID public key
 
@@ -66,6 +67,38 @@
 					applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
 				});
 				var response = await fetch('/subscribe', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(subscription)
+				});
+				alert(await response.text());
+			} catch (err) {
+				console.error('Subscription failed:', err);
+				alert('Subscription failed. See console for details.');
+			}
+		});
+
+		document.getElementById('test-btn').addEventListener('click', async () => {
+			if (!('serviceWorker' in navigator)) {
+				alert('Service workers are not supported in this browser.');
+				return;
+			}
+			if (!('PushManager' in window)) {
+				alert('Push notifications are not supported in this browser.');
+				return;
+			}
+			const permission = await Notification.requestPermission();
+			if (permission !== 'granted') {
+				alert('Notification permission denied.');
+				return;
+			}
+			try {
+				const reg = serviceWorkerRegistration || await navigator.serviceWorker.ready;
+				const subscription = await reg.pushManager.subscribe({
+					userVisibleOnly: true,
+					applicationServerKey: await urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+				});
+				var response = await fetch('/testSubscribe', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(subscription)
