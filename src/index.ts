@@ -123,7 +123,7 @@ export class MyDurableObject extends DurableObject {
 	 * @returns The greeting to be sent back to the Worker
 	 */
 	async sayHello(name: string): Promise<string> {
-		return `Hello, ${name}!`;
+		return `Hello, ${name}! From Durable Object ${this.ctx.id.toString()}`;
 	}
 
 	async registerNotification(subscription: PushSubscription): Promise<void> {
