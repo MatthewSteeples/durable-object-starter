@@ -128,6 +128,8 @@ export class MyDurableObject extends DurableObject {
 
 	async registerNotification(subscription: PushSubscription): Promise<void> {
 
+		console.log("Registering Subscription:", this.ctx.id);
+
 		this.ctx.storage.transactionSync(() => {
 			this.sql.exec("DELETE FROM subscription;");
 			this.sql.exec(
@@ -152,7 +154,7 @@ export class MyDurableObject extends DurableObject {
 	}
 
 	async alarm() {
-		console.log("Alarm triggered");
+		console.log("Alarm triggered: ", this.ctx.id);
 
 		const subscription = this.sql.exec<SubscriptionRecord>("SELECT * FROM subscription LIMIT 1;").one()
 		if (!subscription) throw new Error("No subscription found in storage.");
