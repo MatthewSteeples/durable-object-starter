@@ -265,7 +265,7 @@ export default {
 
 			const postData = JSON.stringify({ message: "Hello from Durable Object test" });
 			const qs = url.searchParams.toString();
-			const path = "/ff1ab090-de9c-4338-9dd8-43d8226aaa6b" + (qs ? "?" + qs : "");
+			const path = "/ede766e4-ed25-4f1b-9c3e-2f4f6181a831" + (qs ? "?" + qs : "");
 
 			const result = await new Promise<string>((resolve, reject) => {
 				const options: https.RequestOptions = {
@@ -296,7 +296,7 @@ export default {
 			console.log("Test endpoint called");
 
 			const qs = url.searchParams.toString();
-			const path = "/ff1ab090-de9c-4338-9dd8-43d8226aaa6b" + (qs ? "?" + qs : "");
+			const path = "/ede766e4-ed25-4f1b-9c3e-2f4f6181a831" + (qs ? "?" + qs : "");
 
 			const result = await new Promise<string>((resolve, reject) => {
 				const options: https.RequestOptions = {
@@ -338,8 +338,8 @@ export default {
 				});
 			};
 
-			const testUrl1 = 'https://webhook.site/ff1ab090-de9c-4338-9dd8-43d8226aaa6b';
-			const testUrl2 = 'https://webhook.site/ff1ab090-de9c-4338-9dd8-43d8226aaa6b?foo=bar';
+			const testUrl1 = 'https://webhook.site/ede766e4-ed25-4f1b-9c3e-2f4f6181a831';
+			const testUrl2 = 'https://webhook.site/ede766e4-ed25-4f1b-9c3e-2f4f6181a831?foo=bar';
 
 			const result1 = await httpsGet(testUrl1);
 			const result2 = await httpsGet(testUrl2);
