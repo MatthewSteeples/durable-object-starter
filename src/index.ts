@@ -49,7 +49,10 @@ export class MyDurableObject extends DurableObject {
 	}
 
 	private ensureSchema() {
-		if (this.initialized) return;
+		if (this.initialized) {
+			console.log("Already Initialised:", this.ctx.id);
+			return;
+		}
 
 		// Check existing table schema
 		const info = this.sql.exec("PRAGMA table_info('subscription');").toArray();
@@ -66,6 +69,9 @@ export class MyDurableObject extends DurableObject {
 				keys_auth   TEXT NOT NULL
 			);`);
 			this.initialized = true;
+
+			console.log("Table created:", this.ctx.id);
+
 			return;
 		}
 
@@ -73,6 +79,7 @@ export class MyDurableObject extends DurableObject {
 		for (const col of expected) {
 			if (!existingCols.includes(col)) {
 				needsMigration = true;
+				console.log(`Missing expected column '${col}', migration needed.`);
 				break;
 			}
 		}
@@ -82,11 +89,13 @@ export class MyDurableObject extends DurableObject {
 			const endpointInfo = info.find((r: any) => r.name === 'endpoint');
 			if (!endpointInfo || !(endpointInfo.pk && Number(endpointInfo.pk) > 0)) {
 				needsMigration = true;
+				console.log(`Column 'endpoint' is not primary key, migration needed.`);
 			}
 		}
 
 		if (!needsMigration) {
 			this.initialized = true;
+			console.log("No migration needed:", this.ctx.id);
 			return;
 		}
 
@@ -111,6 +120,8 @@ export class MyDurableObject extends DurableObject {
 			this.sql.exec('DROP TABLE subscription;');
 			this.sql.exec("ALTER TABLE subscription_new RENAME TO subscription;");
 		});
+
+		console.log("Migration completed:", this.ctx.id);
 
 		this.initialized = true;
 	}
