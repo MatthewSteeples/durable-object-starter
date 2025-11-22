@@ -196,7 +196,7 @@ export class MyDurableObject extends DurableObject {
 
 			var result = await sendNotification(pushSubscription, "Hello from Cloudflare Workers!", options);
 
-			console.log("Notification sent: ", result.statusCode);
+			console.log("Notification sent: ", result.statusCode, result.body);
 
 			// Success: cleanup
 			await this.ctx.storage.deleteAlarm();
