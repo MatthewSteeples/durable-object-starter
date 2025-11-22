@@ -51,10 +51,12 @@ self.addEventListener('fetch', event => {
             // Cache successful responses for static assets
             if (response.ok && event.request.method === 'GET') {
               const responseToCache = response.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => {
-                  cache.put(event.request, responseToCache);
-                });
+              event.waitUntil(
+                caches.open(CACHE_NAME)
+                  .then(cache => {
+                    return cache.put(event.request, responseToCache);
+                  })
+              );
             }
             return response;
           })
