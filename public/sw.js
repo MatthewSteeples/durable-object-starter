@@ -37,11 +37,10 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache with network fallback
 self.addEventListener('fetch', event => {
-  // Skip caching for API requests (non-GET or URLs containing /api/)
+  // Skip caching for API requests (non-GET or specific API endpoints)
   const url = new URL(event.request.url);
-  const isApiRequest = url.pathname.includes('/message') || 
-                       url.pathname.includes('/subscribe') || 
-                       url.pathname.includes('/test');
+  const apiEndpoints = ['/message', '/subscribe', '/testSubscribe', '/test', '/testGet', '/list', '/repro'];
+  const isApiRequest = apiEndpoints.some(endpoint => url.pathname === endpoint || url.pathname.startsWith(endpoint + '/'));
   
   if (isApiRequest || event.request.method !== 'GET') {
     event.respondWith(fetch(event.request));
@@ -56,18 +55,15 @@ self.addEventListener('fetch', event => {
           return response;
         }
         
-        // Otherwise fetch from network
+        // Otherwise fetch from network and cache in background
         return fetch(event.request)
           .then(response => {
-            // Cache successful responses for static assets
+            // Cache successful responses for static assets in background
             if (response.ok) {
               const responseToCache = response.clone();
-              event.waitUntil(
-                caches.open(CACHE_NAME)
-                  .then(cache => {
-                    return cache.put(event.request, responseToCache);
-                  })
-              );
+              caches.open(CACHE_NAME)
+                .then(cache => cache.put(event.request, responseToCache))
+                .catch(err => console.error('Cache error:', err));
             }
             return response;
           })
