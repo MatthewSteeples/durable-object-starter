@@ -37,6 +37,17 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache with network fallback
 self.addEventListener('fetch', event => {
+  // Skip caching for API requests (non-GET or URLs containing /api/)
+  const url = new URL(event.request.url);
+  const isApiRequest = url.pathname.includes('/message') || 
+                       url.pathname.includes('/subscribe') || 
+                       url.pathname.includes('/test');
+  
+  if (isApiRequest || event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -49,7 +60,7 @@ self.addEventListener('fetch', event => {
         return fetch(event.request)
           .then(response => {
             // Cache successful responses for static assets
-            if (response.ok && event.request.method === 'GET') {
+            if (response.ok) {
               const responseToCache = response.clone();
               event.waitUntil(
                 caches.open(CACHE_NAME)
