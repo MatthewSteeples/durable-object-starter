@@ -74,8 +74,8 @@
 				return;
 			}
 			try {
-				const response = await fetch('/vapidPublicKey');
-                const key = await response.text();
+				const vapidResponse = await fetch('/vapidPublicKey');
+                const key = await vapidResponse.text();
 
 				const reg = serviceWorkerRegistration || await navigator.serviceWorker.ready;
 				const subscription = await reg.pushManager.subscribe({
