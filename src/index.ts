@@ -2,6 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import { PushSubscription, sendNotification, setVapidDetails, WebPushError, RequestOptions } from 'web-push';
 import { createHash } from 'node:crypto';
 import https from 'https';
+import path from "node:path";
 
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
@@ -291,6 +292,9 @@ export default {
 
 			await stub.registerNotification(jsonBody);
 			return new Response("Subscribed (log written)");
+		}
+		else if (pathname === "/vapidPublicKey") {
+			return new Response(env.VAPID_PUBLIC_KEY);
 		}
 		else {
 
