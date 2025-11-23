@@ -192,7 +192,7 @@ export class MyDurableObject extends DurableObject {
 			}
 
 			const options: RequestOptions = {
-				TTL: 60,
+				//TTL: 60,
 				urgency: "normal",
 				vapidDetails: {
 					subject: "mailto:matthew@mercuryit.co.uk",
