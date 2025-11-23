@@ -4,17 +4,17 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Durable Object Starter</title>
-		
+
 		<!-- PWA Meta Tags -->
 		<meta name="description" content="A Cloudflare Workers Durable Object starter application with push notifications" />
 		<meta name="theme-color" content="#f38020" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<meta name="apple-mobile-web-app-title" content="DO Starter" />
-		
+
 		<!-- Web App Manifest -->
 		<link rel="manifest" href="/manifest.json" />
-		
+
 		<!-- Icons -->
 		<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
 		<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
@@ -36,7 +36,6 @@
 				});
 		</script>
 		<button id="subscribe-btn">Subscribe</button>
-		<button id="test-btn">Test</button>
 		<script>
 		const VAPID_PUBLIC_KEY = 'BLQLjROLgIgXQXHd6ykhxje8bZiaPe8JcdbTOOG9OgafZnyetcw68Fu69RVHOHEW6DRpqNNJ7rlUjkhxMiceheU'; // TODO: Replace with your actual VAPID public key
 
@@ -93,40 +92,6 @@
 			}
 		});
 
-		document.getElementById('test-btn').addEventListener('click', async () => {
-			if (!('serviceWorker' in navigator)) {
-				alert('Service workers are not supported in this browser.');
-				return;
-			}
-			if (!('PushManager' in window)) {
-				alert('Push notifications are not supported in this browser.');
-				return;
-			}
-			const permission = await Notification.requestPermission();
-			if (permission !== 'granted') {
-				alert('Notification permission denied.');
-				return;
-			}
-			try {
-				const reg = serviceWorkerRegistration || await navigator.serviceWorker.ready;
-				const subscription = await reg.pushManager.subscribe({
-					userVisibleOnly: true,
-					applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-				});
-				var response = await fetch('/testSubscribe', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(subscription)
-				});
-				alert(await response.text());
-			} catch (err) {
-				console.error('Subscription failed:', err);
-				alert('Subscription failed. See console for details.');
-			}
-		});
 		</script>
-
-
-
 	</body>
 </html>
