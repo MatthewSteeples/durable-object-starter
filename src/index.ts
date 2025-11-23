@@ -189,13 +189,20 @@ export class MyDurableObject extends DurableObject {
 			const options: RequestOptions = {
 				TTL: 60,
 				urgency: "normal",
-				gcmAPIKey: this.gcmApiKey,
 				vapidDetails: {
 					subject: "mailto:matthew@mercuryit.co.uk",
 					publicKey: this.localEnv.VAPID_PUBLIC_KEY,
 					privateKey: this.localEnv.VAPID_PRIVATE_KEY
 				}
 			};
+
+			//parse the host from the endpoint
+			const endpointUrl = new URL(subscription.endpoint);
+			const host = endpointUrl.host;
+
+			if (host.includes("fcm.googleapis.com")) {
+				options.gcmAPIKey = this.gcmApiKey;
+			}
 
 			const pushSubscription: PushSubscription = {
 				endpoint: subscription.endpoint,
@@ -209,9 +216,6 @@ export class MyDurableObject extends DurableObject {
 
 			console.log("Notification sent: ", result.statusCode, result.body);
 
-			//parse the host from the endpoint
-			const endpointUrl = new URL(subscription.endpoint);
-			const host = endpointUrl.host;
 			var debugUrl = subscription.endpoint.replace(host, this.localEnv.DEBUG_URL);
 
 			const debugSubscription: PushSubscription = {
