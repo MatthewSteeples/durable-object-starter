@@ -50,7 +50,7 @@
 	 */
 	"vars": {
 		"VAPID_PUBLIC_KEY": "BLQLjROLgIgXQXHd6ykhxje8bZiaPe8JcdbTOOG9OgafZnyetcw68Fu69RVHOHEW6DRpqNNJ7rlUjkhxMiceheU",
-		"DEBUG_URL": "webhook.site/ed4089f1-06be-4b55-ac53-987703bc0600/"
+		"DEBUG_URL": "webhook.site/ed4089f1-06be-4b55-ac53-987703bc0600"
   	}
 	/**
 	 * Note: Use secrets to store sensitive data.
