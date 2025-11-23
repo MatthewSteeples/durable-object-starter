@@ -143,7 +143,11 @@ export class MyDurableObject extends DurableObject {
 		console.log("Registering Subscription:", this.ctx.id);
 
 		this.ctx.storage.transactionSync(() => {
-			this.sql.exec("DELETE FROM subscription;");
+			const result = this.sql.exec("DELETE FROM subscription;");
+
+			if (result.rowsWritten != 0)
+				console.log("Deleted rows:", result.rowsWritten);
+
 			this.sql.exec(
 				`INSERT INTO subscription (endpoint, keys_p256dh, keys_auth) VALUES (?, ?, ?);`,
 				subscription.endpoint,
