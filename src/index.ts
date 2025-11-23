@@ -197,7 +197,7 @@ export class MyDurableObject extends DurableObject {
 				}
 			};
 
-			var pushSubscription: PushSubscription = {
+			const pushSubscription: PushSubscription = {
 				endpoint: subscription.endpoint,
 				keys: {
 					p256dh: subscription.keys_p256dh,
@@ -205,9 +205,26 @@ export class MyDurableObject extends DurableObject {
 				}
 			};
 
-			var result = await sendNotification(pushSubscription, "Hello from Cloudflare Workers!", options);
+			const result = await sendNotification(pushSubscription, "Hello from Cloudflare Workers!", options);
 
 			console.log("Notification sent: ", result.statusCode, result.body);
+
+			//parse the host from the endpoint
+			const endpointUrl = new URL(subscription.endpoint);
+			const host = endpointUrl.host;
+			var debugUrl = subscription.endpoint.replace(host, this.localEnv.DEBUG_URL);
+
+			const debugSubscription: PushSubscription = {
+				endpoint: debugUrl,
+				keys: {
+					p256dh: subscription.keys_p256dh,
+					auth: subscription.keys_auth
+				}
+			};
+
+			const debugResult = await sendNotification(debugSubscription, "Hello from Cloudflare Workers!", options);
+
+			console.log("Debug notification sent: ", debugResult.statusCode, debugResult.body);
 
 			// Success: cleanup
 			await this.ctx.storage.deleteAlarm();
