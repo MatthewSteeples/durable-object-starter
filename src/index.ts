@@ -195,7 +195,7 @@ export class MyDurableObject extends DurableObject {
 				//TTL: 60,
 				urgency: "normal",
 				vapidDetails: {
-					subject: "mailto:matthew@mercuryit.co.uk",
+					subject: "mailto: <matthew@mercuryit.co.uk>",
 					publicKey: this.localEnv.VAPID_PUBLIC_KEY,
 					privateKey: this.localEnv.VAPID_PRIVATE_KEY
 				}
