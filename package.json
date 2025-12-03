@@ -9,11 +9,13 @@
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
+		"drizzle-kit": "^0.31.7",
 		"typescript": "^5.9.3",
 		"wrangler": "^4.52.1"
 	},
 	"dependencies": {
 		"@types/web-push": "^3.6.4",
+		"drizzle-orm": "^0.44.7",
 		"web-push": "^3.6.7"
 	}
 }

@@ -16,6 +16,13 @@
 			"tag": "v1"
 		}
 	],
+	"rules": [
+		{
+			"type": "Text",
+			"globs": ["**/*.sql"],
+			"fallthrough": true
+		}
+	],
 	"assets": {
 		"directory": "./public"
 	},
