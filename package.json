@@ -11,7 +11,7 @@
 	"devDependencies": {
 		"drizzle-kit": "^0.31.8",
 		"typescript": "^5.9.3",
-		"wrangler": "^4.54.0"
+		"wrangler": "^4.56.0"
 	},
 	"dependencies": {
 		"@types/web-push": "^3.6.4",
