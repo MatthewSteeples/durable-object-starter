@@ -6,7 +6,7 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "durable-object-starter",
 	"main": "src/index.ts",
-	"compatibility_date": "2025-08-15",
+	"compatibility_date": "2026-01-01",
 	"compatibility_flags": ["nodejs_compat", "enable_nodejs_http_modules"],
 	"migrations": [
 		{
