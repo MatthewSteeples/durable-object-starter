@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import https from 'https';
 import path from "node:path";
 
+import { connect } from "node:tls";
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
  *
@@ -57,6 +58,12 @@ export default {
 		else if (pathname === "/vapidPublicKey") {
 			return new Response(env.VAPID_PUBLIC_KEY);
 		}
+		else if (pathname === "/cert"){
+			const cert = await getCert("move.ledgerscope.com");
+			return new Response(JSON.stringify(cert, null, 2), {
+				headers: { "content-type": "application/json" },
+			});
+		}
 		else {
 
 			// Create a `DurableObjectId` for an instance of the `MyDurableObject`
@@ -75,5 +82,15 @@ export default {
 		}
 	},
 } satisfies ExportedHandler<Env>;
+
+const getCert = (host: string, port = 443) =>
+  new Promise<any>((resolve, reject) => {
+    const socket = connect({ host, port, servername: host }, () => {
+      const cert = socket.getPeerCertificate(true);
+      socket.end();
+      resolve(cert);
+    });
+    socket.on("error", reject);
+  });
 
 export { MyDurableObject } from "./MyDurableObject";
