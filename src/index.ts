@@ -59,7 +59,10 @@ export default {
 			return new Response(env.VAPID_PUBLIC_KEY);
 		}
 		else if (pathname === "/cert"){
-			const cert = await getCert("move.ledgerscope.com");
+			console.log("Cert endpoint called");
+			const cert = await getCert("one.one.one.one", 443);
+			console.log("Certificate retrieved:", cert);
+
 			return new Response(JSON.stringify(cert, null, 2), {
 				headers: { "content-type": "application/json" },
 			});
@@ -85,10 +88,15 @@ export default {
 
 const getCert = (host: string, port = 443) =>
   new Promise<any>((resolve, reject) => {
+	console.log(`Connecting to ${host}:${port} to retrieve certificate...`);
     const socket = connect({ host, port, servername: host }, () => {
-      const cert = socket.getPeerCertificate(true);
+      console.log("Connected, retrieving certificate...");
+      const cert = socket.getPeerCertificate(false);
+	  console.log("Certificate retrieved, closing connection...");
       socket.end();
+	  console.log("Connection closed, resolving certificate...");
       resolve(cert);
+	  console.log("Certificate resolved:", cert);
     });
     socket.on("error", reject);
   });
