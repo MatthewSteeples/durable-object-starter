@@ -58,15 +58,6 @@ export default {
 		else if (pathname === "/vapidPublicKey") {
 			return new Response(env.VAPID_PUBLIC_KEY);
 		}
-		else if (pathname === "/cert"){
-			console.log("Cert endpoint called");
-			const cert = await getCert("one.one.one.one", 443);
-			console.log("Certificate retrieved:", cert);
-
-			return new Response(JSON.stringify(cert, null, 2), {
-				headers: { "content-type": "application/json" },
-			});
-		}
 		else {
 
 			// Create a `DurableObjectId` for an instance of the `MyDurableObject`
@@ -85,20 +76,5 @@ export default {
 		}
 	},
 } satisfies ExportedHandler<Env>;
-
-const getCert = (host: string, port = 443) =>
-  new Promise<any>((resolve, reject) => {
-	console.log(`Connecting to ${host}:${port} to retrieve certificate...`);
-    const socket = connect({ host, port, servername: host }, () => {
-      console.log("Connected, retrieving certificate...");
-      const cert = socket.getPeerCertificate(false);
-	  console.log("Certificate retrieved, closing connection...");
-      socket.end();
-	  console.log("Connection closed, resolving certificate...");
-      resolve(cert);
-	  console.log("Certificate resolved:", cert);
-    });
-    socket.on("error", reject);
-  });
 
 export { MyDurableObject } from "./MyDurableObject";
