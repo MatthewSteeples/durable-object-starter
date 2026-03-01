@@ -1,4 +1,5 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // type SubscriptionRecord = {
 // 	endpoint: string;
@@ -10,4 +11,5 @@ export const SubscriptionRecords = sqliteTable("subscription_records", {
 	endpoint: text().primaryKey(),
 	keys_p256dh: text().notNull(),
 	keys_auth: text().notNull(),
+	created_date: text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
