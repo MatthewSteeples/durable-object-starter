@@ -1,0 +1,36 @@
+{
+	"name": "durable-object-starter",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "22"
+		},
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"moby": true,
+			"dockerDashComposeVersion": "v2",
+			"installDockerBuildx": true
+		}
+	},
+	"privileged": true,
+	"remoteUser": "vscode",
+	"forwardPorts": [8787],
+	"portsAttributes": {
+		"8787": {
+			"label": "Wrangler Dev"
+		}
+	},
+	"containerEnv": {
+		"DOCKER_BUILDKIT": "1"
+	},
+	"postCreateCommand": "bash -lc 'npm install && cd containers/cert-inspector && npm install'",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			},
+			"extensions": [
+				"ms-azuretools.vscode-containers"
+			]
+		}
+	}
+}

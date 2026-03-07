@@ -40,5 +40,8 @@
 			"./worker-configuration.d.ts",
 			"./src/bindings.d.ts"
 		]
-	}
+	},
+	"exclude": [
+		"containers/**/*"
+	]
 }

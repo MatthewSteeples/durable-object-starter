@@ -5,6 +5,15 @@ import https from 'https';
 import path from "node:path";
 
 import { connect } from "node:tls";
+
+function normalizeCertificateTarget(host: string, port = 443): { host: string; port: number; key: string } {
+	const normalizedHost = host.trim().toLowerCase();
+	return {
+		host: normalizedHost,
+		port,
+		key: `${normalizedHost}:${port}`,
+	};
+}
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
  *
@@ -27,7 +36,7 @@ export default {
 	 * @param ctx - The execution context of the Worker
 	 * @returns The response to be sent back to the client
 	 */
-	async fetch(request, env, ctx): Promise<Response> {
+	async fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext): Promise<Response> {
 
 		// Parse the 'name' parameter from the request URL
 		const url = new URL(request.url);
@@ -35,7 +44,50 @@ export default {
 
 
 		const pathname = url.pathname;
-		if (pathname === "/subscribe") {
+		if (pathname === "/api/certificates/inspect" && request.method === "POST") {
+			const body = await request.json<{ host?: string; port?: number }>();
+			const host = typeof body.host === "string" ? body.host : "";
+			const port = typeof body.port === "number" && Number.isInteger(body.port) ? body.port : 443;
+
+			if (!host.trim()) {
+				return Response.json({ error: "The request body must include a host." }, { status: 400 });
+			}
+
+			if (port < 1 || port > 65535) {
+				return Response.json({ error: "The requested port must be between 1 and 65535." }, { status: 400 });
+			}
+
+			const target = normalizeCertificateTarget(host, port);
+			const inspectorId = env.CERTIFICATE_INSPECTOR.idFromName(target.key);
+			const inspector = env.CERTIFICATE_INSPECTOR.get(inspectorId);
+			const result = await inspector.inspectCertificate(target.host, target.port);
+
+			return Response.json(result);
+		}
+		else if (pathname === "/api/certificates/result" && request.method === "GET") {
+			const host = url.searchParams.get("host") || "";
+			const parsedPort = Number.parseInt(url.searchParams.get("port") || "443", 10);
+
+			if (!host.trim()) {
+				return Response.json({ error: "The host query parameter is required." }, { status: 400 });
+			}
+
+			if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+				return Response.json({ error: "The port query parameter must be between 1 and 65535." }, { status: 400 });
+			}
+
+			const target = normalizeCertificateTarget(host, parsedPort);
+			const inspectorId = env.CERTIFICATE_INSPECTOR.idFromName(target.key);
+			const inspector = env.CERTIFICATE_INSPECTOR.get(inspectorId);
+			const result = await inspector.getStoredInspection();
+
+			if (!result) {
+				return Response.json({ error: "No stored inspection exists for this host and port." }, { status: 404 });
+			}
+
+			return Response.json(result);
+		}
+		else if (pathname === "/subscribe") {
 			console.log("Subscribe endpoint called");
 
 			const jsonBody = await request.json<PushSubscription>();
@@ -75,6 +127,7 @@ export default {
 			return new Response(greeting);
 		}
 	},
-} satisfies ExportedHandler<Env>;
+} satisfies ExportedHandler<Cloudflare.Env>;
 
+export { CertificateInspectorContainer } from "./CertificateInspectorContainer";
 export { MyDurableObject } from "./MyDurableObject";

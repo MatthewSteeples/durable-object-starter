@@ -14,6 +14,12 @@
 				"MyDurableObject"
 			],
 			"tag": "v1"
+		},
+		{
+			"new_sqlite_classes": [
+				"CertificateInspectorContainer"
+			],
+			"tag": "v2"
 		}
 	],
 	"rules": [
@@ -31,9 +37,20 @@
 			{
 				"class_name": "MyDurableObject",
 				"name": "MY_DURABLE_OBJECT"
+			},
+			{
+				"class_name": "CertificateInspectorContainer",
+				"name": "CERTIFICATE_INSPECTOR"
 			}
 		]
 	},
+	"containers": [
+		{
+			"class_name": "CertificateInspectorContainer",
+			"image": "./containers/cert-inspector/Dockerfile",
+			"max_instances": 10
+		}
+	],
 	"observability": {
 		"enabled": true
 	},
