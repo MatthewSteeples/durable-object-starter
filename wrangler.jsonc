@@ -48,7 +48,7 @@
 		{
 			"class_name": "CertificateInspectorContainer",
 			"image": "./containers/cert-inspector/Dockerfile",
-			"max_instances": 10
+			"max_instances": 1
 		}
 	],
 	"observability": {
