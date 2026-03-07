@@ -11,7 +11,7 @@
 	"devDependencies": {
 		"drizzle-kit": "^0.31.9",
 		"typescript": "^5.9.3",
-		"wrangler": "^4.69.0"
+		"wrangler": "^4.71.0"
 	},
 	"dependencies": {
 		"@cloudflare/containers": "^0.1.1",
