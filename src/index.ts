@@ -5,15 +5,7 @@ import https from 'https';
 import path from "node:path";
 
 import { connect } from "node:tls";
-
-function normalizeCertificateTarget(host: string, port = 443): { host: string; port: number; key: string } {
-	const normalizedHost = host.trim().toLowerCase();
-	return {
-		host: normalizedHost,
-		port,
-		key: `${normalizedHost}:${port}`,
-	};
-}
+import { CERTIFICATE_INSPECTOR_SINGLETON, normalizeCertificateTarget } from "./certificates";
 /**
  * Welcome to Cloudflare Workers! This is your first Durable Objects application.
  *
@@ -58,11 +50,14 @@ export default {
 			}
 
 			const target = normalizeCertificateTarget(host, port);
-			const inspectorId = env.CERTIFICATE_INSPECTOR.idFromName(target.key);
+			const inspectorId = env.CERTIFICATE_INSPECTOR.idFromName(CERTIFICATE_INSPECTOR_SINGLETON);
 			const inspector = env.CERTIFICATE_INSPECTOR.get(inspectorId);
 			const result = await inspector.inspectCertificate(target.host, target.port);
+			const storeId = env.CERTIFICATE_INSPECTION_STORE.idFromName(target.key);
+			const store = env.CERTIFICATE_INSPECTION_STORE.get(storeId);
+			const storedInspection = await store.saveInspection(target.host, target.port, result);
 
-			return Response.json(result);
+			return Response.json(storedInspection);
 		}
 		else if (pathname === "/api/certificates/result" && request.method === "GET") {
 			const host = url.searchParams.get("host") || "";
@@ -77,9 +72,9 @@ export default {
 			}
 
 			const target = normalizeCertificateTarget(host, parsedPort);
-			const inspectorId = env.CERTIFICATE_INSPECTOR.idFromName(target.key);
-			const inspector = env.CERTIFICATE_INSPECTOR.get(inspectorId);
-			const result = await inspector.getStoredInspection();
+			const storeId = env.CERTIFICATE_INSPECTION_STORE.idFromName(target.key);
+			const store = env.CERTIFICATE_INSPECTION_STORE.get(storeId);
+			const result = await store.getStoredInspection();
 
 			if (!result) {
 				return Response.json({ error: "No stored inspection exists for this host and port." }, { status: 404 });
@@ -130,4 +125,5 @@ export default {
 } satisfies ExportedHandler<Cloudflare.Env>;
 
 export { CertificateInspectorContainer } from "./CertificateInspectorContainer";
+export { CertificateInspectionStore } from "./CertificateInspectionStore";
 export { MyDurableObject } from "./MyDurableObject";

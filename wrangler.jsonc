@@ -20,6 +20,12 @@
 				"CertificateInspectorContainer"
 			],
 			"tag": "v2"
+		},
+		{
+			"new_sqlite_classes": [
+				"CertificateInspectionStore"
+			],
+			"tag": "v3"
 		}
 	],
 	"rules": [
@@ -41,6 +47,10 @@
 			{
 				"class_name": "CertificateInspectorContainer",
 				"name": "CERTIFICATE_INSPECTOR"
+			},
+			{
+				"class_name": "CertificateInspectionStore",
+				"name": "CERTIFICATE_INSPECTION_STORE"
 			}
 		]
 	},

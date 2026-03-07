@@ -1,6 +1,7 @@
 // Local augmentation to add secret bindings that Wrangler does not type-generate
 // Do NOT edit the generated `worker-configuration.d.ts`; it will be overwritten.
 import type { CertificateInspectorContainer } from "./CertificateInspectorContainer";
+import type { CertificateInspectionStore } from "./CertificateInspectionStore";
 import type { MyDurableObject } from "./MyDurableObject";
 
 declare namespace Cloudflare {
@@ -9,6 +10,7 @@ declare namespace Cloudflare {
 		VAPID_PRIVATE_KEY: string;
 		GCM_APIKey: string;
 		CERTIFICATE_INSPECTOR: DurableObjectNamespace<typeof CertificateInspectorContainer>;
+		CERTIFICATE_INSPECTION_STORE: DurableObjectNamespace<typeof CertificateInspectionStore>;
 	}
 }
 
@@ -16,6 +18,7 @@ declare module "cloudflare:workers" {
   interface Env {
     MY_DURABLE_OBJECT: DurableObjectNamespace<typeof MyDurableObject>;
 	CERTIFICATE_INSPECTOR: DurableObjectNamespace<typeof CertificateInspectorContainer>;
+	CERTIFICATE_INSPECTION_STORE: DurableObjectNamespace<typeof CertificateInspectionStore>;
   }
 }
 
