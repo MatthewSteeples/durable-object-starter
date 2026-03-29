@@ -14,7 +14,7 @@
 		"wrangler": "^4.76.0"
 	},
 	"dependencies": {
-		"@cloudflare/containers": "^0.1.1",
+		"@cloudflare/containers": "^0.2.0",
 		"@types/web-push": "^3.6.4",
 		"drizzle-orm": "^0.45.1",
 		"web-push": "^3.6.7"
